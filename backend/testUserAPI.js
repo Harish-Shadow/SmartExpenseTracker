@@ -1,48 +1,74 @@
-// testApi.js
 import axios from "axios";
 
-const API_URL = "http://localhost:5000/api/users"; // ✅ Change port if needed
+// Base URL of your backend
+const API_URL = "http://localhost:5000/api/expenses";
 
-// Test signup
-async function testSignup() {
+// Replace this with a valid user_id from your database
+const TEST_USER_ID = "1";
+
+// ➕ Test Add Expense via API
+async function testAddExpense() {
   try {
-    const res = await axios.post(`${API_URL}/signup`, {
-      username: "TestUser",
-      email: "testuser@example.com",
-      password: "123456",
+    // Note: POST goes to /add to match your routes
+    const res = await axios.post(`${API_URL}/add`, {
+      user_id: TEST_USER_ID,
+      title: "Test Expense via API",
+      amount: 500,
+      category: "Food",
+      date: "2025-10-07"
     });
-    console.log("✅ Signup successful:", res.data);
+    console.log("✅ Expense added via API:", res.data);
+    return res.data[0].id; // Supabase insert returns an array
   } catch (err) {
     if (err.response) {
-      console.log("❌ Signup error:", err.response.data);
+      console.error("❌ Add expense API error:", err.response.data);
     } else {
-      console.log("❌ Signup failed:", err.message);
+      console.error("❌ Add expense API failed:", err.message);
     }
   }
 }
 
-// Test login
-async function testLogin() {
+// 📋 Test Get Expenses via API
+async function testGetExpenses() {
   try {
-    const res = await axios.post(`${API_URL}/login`, {
-      email: "testuser@example.com",
-      password: "123456",
+    const res = await axios.get(API_URL, {
+      params: { user_id: TEST_USER_ID }
     });
-    console.log("✅ Login successful:", res.data);
+    console.log("✅ Expenses fetched via API:");
+    console.table(res.data);
   } catch (err) {
     if (err.response) {
-      console.log("❌ Login error:", err.response.data);
+      console.error("❌ Fetch expenses API error:", err.response.data);
     } else {
-      console.log("❌ Login failed:", err.message);
+      console.error("❌ Fetch expenses API failed:", err.message);
     }
   }
 }
 
-// Run tests sequentially
+// ❌ Test Delete Expense via API
+async function testDeleteExpense(id) {
+  try {
+    const res = await axios.delete(`${API_URL}/${id}`);
+    console.log("✅ Expense deleted via API (ID:", id, ")");
+  } catch (err) {
+    if (err.response) {
+      console.error("❌ Delete expense API error:", err.response.data);
+    } else {
+      console.error("❌ Delete expense API failed:", err.message);
+    }
+  }
+}
+
+// Run all tests sequentially
 (async () => {
-  console.log("🚀 Testing signup...");
-  await testSignup();
+  console.log("🚀 Testing Add Expense via API...");
+  const expenseId = await testAddExpense();
 
-  console.log("\n🚀 Testing login...");
-  await testLogin();
+  console.log("\n🚀 Fetching All Expenses via API...");
+  await testGetExpenses();
+
+  if (expenseId) {
+    console.log("\n🚀 Testing Delete Expense via API...");
+    await testDeleteExpense(expenseId);
+  }
 })();

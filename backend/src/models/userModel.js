@@ -18,3 +18,4 @@ export async function createUser({ username, email, password }) {
       .single();
     return { user: data, error };
 }
+
